@@ -353,10 +353,6 @@
         if ([names containsObject:name]) {
             return NO;
         } else {
-            if (!name) {
-                return NO;
-            }
-            
             [names addObject:name];
 
             // Skip methods and properties which are just overrides,

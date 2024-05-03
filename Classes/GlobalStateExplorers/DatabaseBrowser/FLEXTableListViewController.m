@@ -93,37 +93,16 @@
 }
     
 - (void)queryButtonPressed {
-    [self showQueryInput:nil];
-}
-
-- (void)showQueryInput:(NSString *)prefillQuery {
     FLEXSQLiteDatabaseManager *database = self.dbm;
     
     [FLEXAlert makeAlert:^(FLEXAlert *make) {
         make.title(@"Execute an SQL query");
-        make.configuredTextField(^(UITextField *textField) {
-            textField.text = prefillQuery;
-        });
-        
+        make.textField(nil);
         make.button(@"Run").handler(^(NSArray<NSString *> *strings) {
-            NSString *query = strings[0];
-            FLEXSQLResult *result = [database executeStatement:query];
+            FLEXSQLResult *result = [database executeStatement:strings[0]];
             
             if (result.message) {
-                // Allow users to edit their last query if it had an error
-                if ([result.message containsString:@"error"]) {
-                    [FLEXAlert makeAlert:^(FLEXAlert *make) {
-                        make.title(@"Error").message(result.message);
-                        make.button(@"Edit Query").preferred().handler(^(NSArray<NSString *> *_) {
-                            // Show query editor again with our last input
-                            [self showQueryInput:query];
-                        });
-                        
-                        make.button(@"Cancel").cancelStyle();
-                    } showFrom:self];
-                } else {
-                    [FLEXAlert showAlert:@"Message" message:result.message from:self];
-                }
+                [FLEXAlert showAlert:@"Message" message:result.message from:self];
             } else {
                 UIViewController *resultsScreen = [FLEXTableContentViewController
                     columns:result.columns rows:result.rows

@@ -100,9 +100,8 @@ BOOL FLEXConstructorsShouldRun() {
         description = [description stringByAppendingFormat:@" %@", [self stringForCGRect:view.frame]];
     }
     
-    if (view.accessibilityLabel.length > 0 || view.accessibilityIdentifier.length > 0) {
-        description = [description stringByAppendingFormat:@" · %@",
-                       view.accessibilityLabel.length > 0 ? view.accessibilityLabel : view.accessibilityIdentifier];
+    if (view.accessibilityLabel.length > 0) {
+        description = [description stringByAppendingFormat:@" · %@", view.accessibilityLabel];
     }
     
     return description;

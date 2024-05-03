@@ -23,7 +23,6 @@
 #import "FLEXMethod.h"
 #import "Firestore.h"
 
-#import <AVFoundation/AVFoundation.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
 #import <dispatch/queue.h>
@@ -238,9 +237,7 @@ static void _logos_method$_ungrouped$FIRDocumentReference$getDocumentWithComplet
     FIRDocumentSnapshotBlock orig = completion;
     completion = ^(FIRDocumentSnapshot *document, NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDocumentDidFetch:document error:error transactionID:requestID];
-        if (orig != nil) {
-            orig(document, error);
-        }
+        orig(document, error);
     };
     
     // Forward invocation
@@ -259,9 +256,7 @@ static void _logos_method$_ungrouped$FIRQuery$getDocumentsWithCompletion$(
     FIRQuerySnapshotBlock orig = completion;
     completion = ^(FIRQuerySnapshot *query, NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRQueryDidFetch:query error:error transactionID:requestID];
-        if (orig != nil) {
-            orig(query, error);
-        }
+        orig(query, error);
     };
     
     // Forward invocation
@@ -290,9 +285,7 @@ static void _logos_method$_ungrouped$FIRDocumentReference$setData$merge$completi
     void (^orig)(NSError *) = completion;
     completion = ^(NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDidSetData:error transactionID:requestID];
-        if (orig != nil) {
-            orig(error);
-        }
+        orig(error);
     };
     
     // Forward invocation
@@ -320,9 +313,7 @@ static void _logos_method$_ungrouped$FIRDocumentReference$setData$mergeFields$co
     void (^orig)(NSError *) = completion;
     completion = ^(NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDidSetData:error transactionID:requestID];
-        if (orig != nil) {
-            orig(error);
-        }
+        orig(error);
     };
     
     // Forward invocation
@@ -342,9 +333,7 @@ static void _logos_method$_ungrouped$FIRDocumentReference$updateData$completion$
     void (^orig)(NSError *) = completion;
     completion = ^(NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDidUpdateData:error transactionID:requestID];
-        if (orig != nil) {
-            orig(error);
-        }
+        orig(error);
     };
     
     // Forward invocation
@@ -364,9 +353,7 @@ static void _logos_method$_ungrouped$FIRDocumentReference$deleteDocumentWithComp
     void (^orig)(NSError *) = completion;
     completion = ^(NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDidDeleteDocument:error transactionID:requestID];
-        if (orig != nil) {
-            orig(error);
-        }
+        orig(error);
     };
     
     // Forward invocation
@@ -384,9 +371,7 @@ static FIRDocumentReference * _logos_method$_ungrouped$FIRCollectionReference$ad
     void (^orig)(NSError *) = completion;
     completion = ^(NSError *error) {
         [FLEXNetworkRecorder.defaultRecorder recordFIRDidAddDocument:error transactionID:requestID];
-        if (orig != nil) {
-            orig(error);
-        }
+        orig(error);
     };
 
     // Forward invocation
@@ -667,20 +652,15 @@ static FIRDocumentReference * _logos_method$_ungrouped$FIRCollectionReference$ad
     Method originalResume = class_getInstanceMethod(class, selector);
     IMP implementation = imp_implementationWithBlock(^(NSURLSessionTask *slf) {
         
-        // AVAggregateAssetDownloadTask deeply does not like to be looked at. Accessing -currentRequest or
-        // -originalRequest will crash. Do not try to observe these. https://github.com/FLEXTool/FLEX/issues/276
-        if (![slf isKindOfClass:[AVAggregateAssetDownloadTask class]]) {
-            // iOS's internal HTTP parser finalization code is mysteriously not thread safe,
-            // invoking it asynchronously has a chance to cause a `double free` crash.
-            // This line below will ask for HTTPBody synchronously, make the HTTPParser
-            // parse the request, and cache them in advance. After that the HTTPParser
-            // will be finalized. Make sure other threads inspecting the request
-            // won't trigger a race to finalize the parser.
-            [slf.currentRequest HTTPBody];
+        // iOS's internal HTTP parser finalization code is mysteriously not thread safe,
+        // invoking it asynchronously has a chance to cause a `double free` crash.
+        // This line below will ask for HTTPBody synchronously, make the HTTPParser
+        // parse the request, and cache them in advance. After that the HTTPParser
+        // will be finalized. Make sure other threads inspecting the request
+        // won't trigger a race to finalize the parser.
+        [slf.currentRequest HTTPBody];
 
-            [FLEXNetworkObserver.sharedObserver URLSessionTaskWillResume:slf];
-        }
-
+        [FLEXNetworkObserver.sharedObserver URLSessionTaskWillResume:slf];
         ((void(*)(id, SEL))objc_msgSend)(
             slf, swizzledSelector
         );
@@ -1901,12 +1881,6 @@ didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask
         NSString *requestID = [[self class] requestIDForConnectionOrTask:dataTask];
         FLEXInternalRequestState *requestState = [self requestStateForRequestID:requestID];
 
-        // Fix for "Response body not in cache" issue reported by developers
-        // See this github comment for detailed explanation on why this happens
-        // https://github.com/FLEXTool/FLEX/issues/568#issuecomment-1141015572
-        if (requestState.dataAccumulator == nil) {
-            requestState.dataAccumulator = [NSMutableData new];
-        }
         [requestState.dataAccumulator appendData:data];
 
         [FLEXNetworkRecorder.defaultRecorder
@@ -1985,12 +1959,6 @@ didFinishDownloadingToURL:(NSURL *)location data:(NSData *)data
 }
 
 - (void)URLSessionTaskWillResume:(NSURLSessionTask *)task {
-    // AVAggregateAssetDownloadTask deeply does not like to be looked at. Accessing -currentRequest or
-    // -originalRequest will crash. Do not try to observe these. https://github.com/FLEXTool/FLEX/issues/276
-    if ([task isKindOfClass:[AVAggregateAssetDownloadTask class]]) {
-        return;
-    }
-
     // Since resume can be called multiple times on the same task, only treat the first resume as
     // the equivalent to connection:willSendRequest:...
     [self performBlock:^{

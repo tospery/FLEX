@@ -22,7 +22,6 @@ NSAssert(!self._action, @"Cannot mutate action after retreiving underlying UIAle
 @property (nonatomic) NSString *_title;
 @property (nonatomic) UIAlertActionStyle _style;
 @property (nonatomic) BOOL _disable;
-@property (nonatomic) BOOL _isPreferred;
 @property (nonatomic) void(^_handler)(UIAlertAction *action);
 @property (nonatomic) UIAlertAction *_action;
 @end
@@ -73,18 +72,7 @@ NSAssert(!self._action, @"Cannot mutate action after retreiving underlying UIAle
         [alert._controller addAction:builder.action];
     }
 
-    UIAlertController *controller = alert._controller;
-    
-    // Set preferred action on alert controller
-    for (FLEXAlertAction *builder in alert._actions) {
-        UIAlertAction *action = builder.action;
-        if (builder._isPreferred) {
-            controller.preferredAction = action;
-            break;
-        }
-    }
-    
-    return controller;
+    return alert._controller;
 }
 
 + (void)make:(FLEXAlertBuilder)block
@@ -211,14 +199,6 @@ NSAssert(!self._action, @"Cannot mutate action after retreiving underlying UIAle
     return ^FLEXAlertAction *() {
         FLEXAlertActionMutationAssertion();
         self._style = UIAlertActionStyleCancel;
-        return self;
-    };
-}
-
-- (FLEXAlertActionProperty)preferred {
-    return ^FLEXAlertAction *() {
-        FLEXAlertActionMutationAssertion();
-        self._isPreferred = YES;
         return self;
     };
 }
